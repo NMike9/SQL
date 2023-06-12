@@ -1,0 +1,416 @@
+-- This is my first SQL repository entry. I wanted to start simple.
+-- These are real stats from my fantasy football league with my friends. 
+-- As the commissioner of our league I was able to access the stats and I wanted to go through and see who
+-- been successful and who hasn't. I ran simple queries to see who has scored the most points, who has had the most points scored against them, 
+-- I check multiple simple stats over the last 6 Fantast Football seasons. 
+
+
+CREATE DATABASE fellas_fantasy_football;
+
+CREATE TABLE Results (
+  		playerid int, 
+  		rank int, 
+  		TeamName varchar(50),
+  		Year int, 
+  		Win int, 
+  		Loss int, 
+  		Tie int,
+  		PtsFor float,
+  		PtsAgnst float,
+  		Moves int);
+  		
+      
+INSERT INTO results (playerid, rank, TeamName, Year, Win, Loss, Tie, PtsFor, PtsAgnst, Moves)
+VALUES (3, 1, 'The Stink', 2022, 12, 2, 0, 1345.98, 1234.12, 24),
+			 (11, 2, 'Frau-drian Peterson', 2023, 9, 5, 0, 1291.36, 1139.46, 36),
+       (9, 3, 'Ivory Mahomes', 2023, 8, 6, 0, 1470.08, 1323.74, 12),
+       (2, 4, 'StinkyMustache', 2023, 9, 5, 0, 1467.72, 1282.34, 9), 
+       (7, 5, 'David Team', 2023, 8, 6, 0, 1364.72, 1279.00, 11),
+       (13, 6, 'Spicy Noodles', 2023, 8, 6, 0, 1151.40, 1307.12, 5), 
+       (14, 7, 'Mustache Ride', 2023, 3, 11, 0, 1046.98, 1273.32, 13), 
+       (10, 8, 'Bert Herbs', 2023, 7, 7, 0, 1327.54, 12360.74, 38), 
+       (5, 9, 'Goat in the water', 2023, 7, 7, 0, 1327.84, 1301.10, 36), 
+       (1, 10, 'Josh Jacob Jingleheimer Schmit', 2023, 6, 8, 0, 1203.28, 1251.56, 8), 
+       (12, 11, '49ers', 2023, 2, 12, 0, 1037.16, 1287.48, 21),
+       (4, 12, 'IYKYK', 2023, 5, 9, 0, 1066.38, 1160.46, 5);
+
+-- Realized I put the wrong values for the year column in the results table 
+
+UPDATE results
+SET Year = 2022
+WHERE playerid != 3
+
+-- Adding values to the results table for years 2021 and 2020
+
+INSERT INTO results (playerid, rank, TeamName, Year, Win, Loss, Tie, PtsFor, PtsAgnst, Moves)
+VALUES (5, 1, 'Goat in the water', 2021, 7, 7, 0, 1288.84, 1293.10, 24),
+			 (12, 2, '49ers', 2021, 7, 7, 0, 1344.12, 1319.44, 10), 
+       (10, 3, 'Bert Herbs', 2021, 11, 3, 0, 1434.52, 1237.94, 22), 
+       (9, 4, 'Russell Tedwater', 2021, 10, 4, 0, 1455.92, 1308.82, 36), 
+       (3, 5, 'The Stink', 2021, 8, 6, 0, 1442.82, 1225.22, 21), 
+       (7, 6, 'David Team', 2021, 8, 6, 0, 1342.50, 1351.94, 26),
+       (14, 7, 'Mustache Ride', 2021, 7, 7, 0, 1275.86, 1287.52, 32), 
+       (1, 8, 'Josh Jacob Jingleheimer Schmit', 2021, 7, 7, 0, 1155.26, 1222.70, 8),
+       (11, 9, 'Frau-drian Peterson', 2021, 5, 9, 0, 1213.56, 1285.66, 28), 
+       (4, 10, 'IYKYK', 2021, 5, 9, 0, 1269.74, 1375.78, 11), 
+       (2, 11, 'StinkyMustache', 2021, 4, 10, 0, 1096.96, 1351.66, 19), 
+       (13, 12, 'Spicy Noodles', 2021, 5, 9, 0, 1234.24, 1294.56, 5);
+       
+-- Entering values for 2020 season
+       
+INSERT INTO results (playerid, rank, TeamName, Year, Win, Loss, Tie, PtsFor, PtsAgnst, Moves)
+VALUES (12, 1, '49ers', 2020, 9, 4, 0, 1160.82, 1085.24, 24), 
+		   (9, 2, 'Ivory Mahomes', 2020, 11, 2, 0, 1426.08, 1101.90, 25), 
+       (14, 3, 'Mustache Ride', 2020, 9, 4, 0, 1291.20, 1110.44, 23), 
+       (8, 4, 'Daniel Team', 2020, 8, 5, 0, 1117.12, 1094.66, 1), 
+       (2, 5, 'StinkyMustache', 2020, 8, 5, 0, 1372.28, 1167.14, 13), 
+       (1, 6, 'Hunter Renfrow', 2020, 8, 5, 0, 1104.60, 1095.30, 8), 
+       (11, 7, 'Frau-drian Peterson', 2020, 7, 6, 0, 1110.54, 1161.50, 24), 
+       (10, 8, 'Juiced Sherbert', 2020, 7, 6, 0, 1100.48, 1116.16, 38), 
+       (3, 9, 'The Stink', 2020, 4, 9, 0, 1141.50, 1154.60, 37),
+       (13, 10, 'Spicy Noodles', 2020, 6, 7, 0, 1179.10, 1170.82, 11),
+       (4, 11, 'ET', 2020, 6, 7, 0, 1097.72, 1152.36, 15), 
+       (6, 12, 'Jorg Jocks', 2020, 4, 9, 0, 1090.60, 1255.22, 6), 
+       (7, 13, 'David Team', 2020, 4, 9, 0, 1084.68, 1151.30, 18),
+       (5, 14, 'Orchids of Asia', 2020, 0, 13, 0, 829.24, 1289.32, 10);
+       
+-- Values for 2017-19 Seasons
+
+INSERT INTO results (playerid, rank, TeamName, Year, Win, Loss, Tie, PtsFor, PtsAgnst, Moves)
+VALUES (3, 1, 'The Stink', 2019,	7, 6, 0, 1216.34,	1206.68, 33),
+			 (6, 2, 'Jorg Jocks', 2019, 9, 4, 0, 1343.76, 1099.08, 2),
+			 (13, 3, 'Spicy Noodles', 2019, 10, 3, 0, 1304.80, 1161.46, 12),
+			 (12, 4, 'Sam Swag Team', 2019, 7, 6, 0, 1153.62, 1150.12, 8),
+			 (2, 5, 'StinkyMustache', 2019,	8, 5, 0, 1156.88, 1177.66, 15),
+			 (4, 6, 'ET', 2019, 8, 5, 0, 1346.22, 1233.08, 4),
+			 (7, 7, 'David Team', 2019,	6, 7, 0, 1134.64, 1159.22, 24),
+			 (1, 8, 'Hunter Renfrow', 2019, 6, 7, 0, 1263.92, 1212.94, 10),
+			 (9, 9, 'Ivory Mahomes', 2019, 6, 7, 0, 1163.32, 1234.62, 34),
+			 (5, 10, 'Orchids of Asia',	2019, 4, 9, 0, 1010.98, 1166.68, 4),
+			 (10, 11, 'AARon', 2019, 4, 9, 0, 1106.34, 1322.00, 70),
+			 (14, 12, 'Mustache Ride', 2019, 3, 10, 0, 1076.28, 1153.56, 12),
+       (9, 1, 'Ivory Mahomes', 2018, 9, 4, 0, 1338.82, 1162.02, 37),
+			 (3, 2, 'The Stink', 2018, 10, 3, 0, 1439.12 ,1101.52, 49),
+		   (4, 3, 'Brady Bunch', 2018, 7, 6, 0, 1269.54, 1239.32, 5),
+		   (13, 4, 'Spicy Noodles', 2018, 9, 4, 0, 1198.66, 1106.20, 12),
+		   (11, 5, 'Frau-drian Peterson', 2018,	7, 6, 0, 957.88, 1187.94, 1),
+		   (10, 6, 'Danica Patrick Boy', 2018, 8, 5, 0, 1334.32, 1206.38, 26),
+		   (7, 7, 'David Team', 2018, 6, 7, 0, 1310.24, 1309.04, 12),
+		   (12, 8, 'Sam Swag Team', 2018, 5, 8, 0, 1157.34, 1246.48, 5),
+		   (14, 9, 'Mustache Ride', 2018, 5, 8, 0, 1234.80, 1231.00,	5),
+		   (1, 10, 'Mike Ditka', 2018, 5, 8, 0, 1125.66, 1169.46, 1),
+		   (2, 11, 'StinkyMustache', 2018, 2, 11, 0, 851.34, 1175.52, 1),
+		   (5, 12, 'Dakstreet Boys', 2018, 5, 8, 0, 1001.94, 1084.78, 4),
+       (14, 1, 'Mustache Ride', 2017, 9, 4, 0, 1219.14, 1104.60, 16),
+		   (7, 2, 'David Team', 2017, 8, 5, 0, 1327.58, 985.06, 39),
+		   (10, 3, 'Wilson', 2017, 11, 2, 0, 1287.04, 1014.76, 31),
+		   (3, 4, 'The Stink', 2017, 9, 4, 0, 1178.16, 1057.98, 41),
+		   (13, 5, 'Manwhich', 2017, 7, 6, 0, 1144.72, 1113.46, 23),
+		   (4, 6,	'Saving Matt Ryan', 2017, 7, 6, 0, 1059.64, 1040.22, 6),
+		   (12, 7, 'Sam Swag Team', 2017, 6, 7, 0, 1140.82, 1031.44, 3),
+		   (1, 8, 'Mike Ditka', 2017, 6, 7, 0, 1009.16, 1170.72, 5),
+       (11, 9, 'Frau-drian Peterson', 2017, 3, 10, 0, 822.52, 1122.20, 1),
+		   (9, 10, 'I cant Winston', 2017, 2, 11, 0, 921.62, 1182.50, 17),
+		   (2, 11, 'StinkyMustache', 2017, 4, 9, 0, 825.32, 1040.04, 1),
+		   (5, 12, 'Ezekiel 2517', 2017, 6, 7, 0, 927.78, 1000.52, 4);
+       
+-- This small table will have valuable playoff information 
+
+CREATE TABLE playoffs (
+  		playerid int, 
+  		Year int,
+  		bracket varchar(20),
+  		bye boolean,
+  		podium varchar(10));
+      
+-- Decided to change the playoffs table slightly 
+
+ALTER TABLE playoffs
+ADD Year int;
+
+ALTER TABLE playoffs
+DROP Column podium;
+
+ALTER TABLE playoffs 
+ADD round varchar(20);
+      
+-- Entering all values for playoff table now that it is fixed
+
+INSERT INTO playoffs (playerid, bracket, bye, Year, round)
+			VALUES (3, 'championship', 'Y', 2022, 'finale'),
+      			 (2, 'championship', 'Y', 2022, 'semifinal'),
+             (9, 'championship', 'N', 2022, 'semifinal'),
+             (7, 'championship', 'N', 2022, 'quarterfinal'),
+             (11, 'championship', 'N', 2022, 'finale'),
+             (13, 'championship', 'N', 2022, 'quarterfinal'),
+             (5, 'consolation', 'N', 2022, 'NA'),
+             (4, 'consoltion', 'N', 2022, 'NA'),
+             (14, 'consolation', 'N', 2022, 'NA'),
+             (1, 'consolation', 'N', 2022, 'NA'),
+             (12, 'consolation', 'N', 2022, 'NA'),
+             (10, 'consolation', 'N', 2022, 'NA'),
+             (10, 'championship', 'Y', 2021, 'semifinal'),
+             (9, 'championship', 'Y', 2021, 'semifinal'),
+             (7, 'championship', 'N', 2021, 'quarterfinal'),
+             (12, 'championship', 'N', 2021, 'finale'),
+             (3, 'championship', 'N', 2021, 'quarterfinal'), 
+             (5, 'championship', 'N', 2021, 'finale'),
+             (14, 'consolation', 'N', 2021, 'NA'),
+             (13, 'consolation', 'N', 2021, 'NA'), 
+             (11, 'consolation', 'N', 2021, 'NA'),
+             (4, 'consolation', 'N', 2021, 'NA'),
+             (2, 'consolation', 'N', 2021, 'NA'),
+             (1, 'consolation', 'N', 2021, 'NA'), 
+             (9, 'championship', 'Y', 2020, 'finale'),
+             (14, 'championship', 'Y', 2020, 'semifinal'),
+             (2, 'championship', 'N', 2020, 'quarterfinal'),
+             (8, 'championship', 'N', 2020, 'semifinal'), 
+             (12, 'championship', 'N', 2020, 'finale'),
+             (1, 'championship', 'N', 2020, 'quarterfinal'),
+             (11, 'consolation', 'N', 2020, 'NA'),
+             (4, 'consolation', 'N', 2020, 'NA'),
+             (3, 'consolation', 'N', 2020, 'NA'), 
+             (13, 'consolation', 'N', 2020, 'NA'), 
+             (6, 'consolation', 'N', 2020, 'NA'), 
+             (10, 'consolation', 'N', 2020, 'NA'), 
+             (13, 'championship', 'Y', 2019, 'semifinal'), 
+             (6, 'championship', 'Y', 2019, 'finale'),
+             (2, 'championship', 'N', 2019, 'quarterfinal'),
+             (3, 'championship', 'N', 2019, 'finale'),
+             (4, 'championship', 'N', 2019, 'quarterfinal'),
+             (12, 'championship', 'N', 2019, 'semifinal'),
+             (1, 'consolation', 'N', 2019, 'NA'), 
+             (10, 'consolation', 'N', 2019, 'NA'), 
+             (5, 'consolation', 'N', 2019, 'NA'), 
+             (7, 'consolation', 'N', 2019, 'NA'), 
+             (14, 'consolation', 'N', 2019, 'NA'), 
+             (9, 'consolation', 'N', 2019, 'NA'), 
+             (3, 'championship', 'Y', 2018, 'finale'), 
+             (9, 'championship', 'Y', 2018, 'finale'), 
+             (10, 'championship', 'N', 2018, 'quarterfinal'),
+             (4, 'championship', 'N', 2018, 'semifinal'), 
+             (13, 'championship', 'N', 2018, 'semifinal'), 
+             (11, 'championship', 'N', 2018, 'quarterfinal'), 
+             (1, 'consolation', 'N', 2018, 'NA'), 
+             (7, 'consolation', 'N', 2018, 'NA'), 
+             (5, 'consolation', 'N', 2018, 'NA'), 
+             (12, 'consolation', 'N', 2018, 'NA'), 
+             (14, 'consolation', 'N', 2018, 'NA'), 
+             (2, 'consolation', 'N', 2018, 'NA'), 
+             (10, 'championship', 'Y', 2017, 'semifinal'), 
+             (14, 'championship', 'Y', 2017, 'finale'), 
+             (7, 'championship', 'N', 2017, 'finale'), 
+             (13, 'championship', 'N', 2017, 'quarterfinal'), 
+             (3, 'championship', 'N', 2017, 'semifinal'), 
+             (4, 'championship', 'N', 2017, 'quarterfinal'), 
+             (12, 'consolation', 'N', 2017, 'NA'), 
+             (2, 'consolation', 'N', 2017, 'NA'), 
+             (11, 'consolation', 'N', 2017, 'NA'), 
+             (5, 'consolation', 'N', 2017, 'NA'), 
+             (9, 'consolation', 'N', 2017, 'NA'), 
+             (1, 'consolation', 'N', 2017, 'NA');              		
+       
+-- This query will show the player with the most seasons with a positive point differential 
+
+SELECT COUNT(player_name), player_name
+FROM RESULTS 
+WHERE (PtsFor - PtsAgnst) >= 0
+GROUP BY player_name
+ORDER BY COUNT(player_name) DESC;
+
+-- Another way of showing the same thing. Number of seasons in positive point differential 
+
+SELECT player_name,
+	SUM(CASE
+  			WHEN (PtsFor - PtsAgnst) > 0 THEN 1 ELSE 0 END) as n_pos_pt_diff
+FROM results
+GROUP BY player_name
+ORDER BY n_pos_pt_diff DESC
+
+-- Player/Manager with most total points against them
+
+SELECT SUM(PtsAgnst), player_name
+FROM results 
+GROUP BY player_name 
+ORDER BY SUM(PtsAgnst) DESC
+
+-- Player/Manager with most total points scored
+
+SELECT SUM(PtsFor), player_name
+FROM results 
+GROUP BY player_name 
+ORDER BY SUM(PtsFor) DESC
+
+-- Players/Managers with most Championships from highest to lowest
+
+SELECT player_name, COUNT(rank) AS n_championships
+FROM results 
+WHERE rank = 1
+GROUP BY player_name
+ORDER BY COUNT(rank) DESC;
+
+-- Most all time wins from highest to lowest (All seasons combined)
+
+SELECT player_name, SUM(win)
+FROM results 
+GROUP BY player_name 
+ORDER BY SUM(win) DESC
+
+-- Average win per season per player
+
+SELECT player_name, AVG(win)
+FROM results
+GROUP BY player_name
+ORDER BY AVG(win) DESC;
+
+--Average points scored by player/manager per game 
+
+SELECT player_name, AVG(PtsFor) / 13.3
+FROM results 
+GROUP BY player_name
+ORDER BY AVG(PtsFor) DESC;
+
+
+-- Average point against for each manager per game 
+
+SELECT player_name, AVG(PtsAgnst) / 13.3 AS Avg_perGame
+FROM results
+GROUP BY player_name 
+ORDER BY AVG(PtsAgnst) DESC;
+
+-- Amount of top 2 finishes
+
+SELECT player_name, COUNT(rank) AS Championship_Appearances
+FROM results
+WHERE rank IN (1, 2)
+GROUP BY player_name 
+ORDER BY COUNT(rank) desc
+
+-- Most manager transactions in a season from highest to lowest
+
+SELECT player_name, moves, Year
+FROM results
+GROUP BY player_name, moves, Year
+ORDER BY moves DESC;
+
+-- Highest avg "points for" per game by season
+
+SELECT player_name, Year, AVG(PtsFor) / 13.3 AS Avg_Points
+FROM results 
+GROUP BY player_name, Year
+ORDER BY Avg_Points DESC;
+
+
+-- Average points per game per season 
+
+SELECT AVG(PtsFor) / 13.3, Year
+FROM Results 
+GROUP BY Year
+ORDER BY Year DESC;
+
+-- Average points against per game per season (This should be the same results as the query above)
+
+SELECT AVG(PtsAgnst) / 13.3, Year
+FROM Results 
+GROUP BY Year
+ORDER BY Year DESC;
+
+-- Number of times each manager has made the playoffs from highest to lowest
+
+SELECT r.player_name, COUNT(r.player_name)
+FROM results as r
+JOIN playoffs as p on r.playerid = p.playerid AND r.Year = p.Year
+WHERE bracket = 'championship'
+GROUP BY r.player_name
+ORDER BY COUNT(r.player_name) DESC;
+
+-- Number of times a manager has had a first round bye from highest to lowest
+
+SELECT r.player_name, COUNT(r.player_name)
+FROM results as r
+JOIN playoffs as p on r.playerid = p.playerid AND r.Year = p.Year
+WHERE p.bye = 'Y'
+GROUP BY r.player_name
+ORDER BY COUNT(r.player_name) DESC;
+
+-- Total of Transactions made from highest to lowest
+
+SELECT player_name, SUM(moves)
+FROM results
+GROUP BY player_name
+ORDER BY SUM(moves) DESC;
+
+--Total Point Differential 
+
+SELECT player_name, SUM(PtsFor - PtsAgnst) as pt_diff
+FROM results
+GROUP BY player_name
+ORDER BY pt_diff DESC
+
+--Player name and seasons in Pos Point Diff
+
+SELECT player_name, year, (PtsFor - PtsAgnst) AS pt_diff
+FROM results 
+GROUP BY player_name, year, (PtsFor - PtsAgnst)
+HAVING (PtsFor - PtsAgnst) > 0
+ORDER BY pt_diff DESC
+
+
+-- Subquery
+
+SELECT TeamName, Year, win, PtsFor
+FROM results 
+WHERE win > (SELECT AVG(win) FROM results)
+GROUP BY TeamName, Year, win, PtsFor
+ORDER BY win DESC;
+
+SELECT player_name, win, loss, (PtsFor - PtsAgnst) AS PtDiff 
+FROM results 
+WHERE playerid IN (SELECT playerid from playoffs WHERE bye = 'Y' and playoffs.Year = results.Year) 
+
+-- Practicing a window function 
+
+SELECT DISTINCT(r.player_name), p.bracket,
+COUNT(p.bracket) OVER (PARTITION BY r.player_name) playoff_appearances
+FROM results as r
+JOIN playoffs as p on r.playerid = p.playerid AND p.Year = r.Year
+WHERE p.bracket = 'championship'
+
+SELECT player_name, Year, PtsFor,
+AVG(PtsFor) OVER(PARTITION BY player_name) as AVERAGE_points,
+MIN(PtsFor) OVER(PARTITION BY player_name) as MIN_points,
+MAX(PtsFor) OVER(PARTITION BY player_name) as MAX_points
+FROM results 
+
+UPDATE results
+SET TeamName = 'Stinky'
+WHERE playerid = 3
+
+ALTER TABLE results
+RENAME COLUMN rank TO final_ranking
+
+SELECT SQ.* FROM (SELECT r.player_name, r.win, p.round, r.Year, r.PtsFor, AVG(PtsFor) OVER (PARTITION BY p.Year)
+FROM results as r
+JOIN playoffs as p on r.playerid = p.playerid and r.Year = p.Year) AS SQ 
+WHERE SQ.PtsFor > 1100
+
+SELECT r.player_name,
+		SUM(CASE WHEN p.round = 'NA' THEN 1
+        ELSE 0 END) AS most_non_playoffs
+FROM results as r
+JOIN playoffs as p on r.playerid = p.playerid AND r.Year = p.Year
+GROUP BY r.player_name 
+
+SELECT playerid, Year, round, bye
+FROM playoffs 
+WHERE playerid = 3
+
+SELECT player_name, COUNT(*) AS min_ptsfor 
+FROM (
+  		SELECT player_name, Year, PtsFor, MIN(PtsFor) OVER (Partition By Year) AS min_ptsfor
+  		FROM results) AS SQ
+   WHERE PtsFor = min_ptsfor
+   GROUP BY player_name
+
+
+
