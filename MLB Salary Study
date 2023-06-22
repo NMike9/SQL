@@ -1,0 +1,363 @@
+-- In this repository entry I want to see if spending more money on total team salary leads to winning and success. 
+
+-- It is a large dataset so I am going to start out searching when salary spending reflected modern day salary spending
+-- I will run a query to see how far back the stats and baseball data go. 
+
+-- The following query shows us that the first year of stats in this database starts in 1871 in the NA league
+-- A league that is no longer active 
+
+SELECT MIN(yearid), lgid
+FROM teams
+GROUP BY lgid
+
+-- The next query will show us which leagues are active 
+
+SELECT * 
+FROM leagues 
+WHERE active = 'Y'
+
+-- Lets find out what is considered the first year of the AL, ML, and NL in this dataset 
+
+SELECT MIN(yearid)
+FROM teams as t
+JOIN leagues as l
+ON t.lgid = l.lgid
+WHERE l.lgid IN ('AL', 'NL', 'ML') AND l.active = 'Y'
+
+-- It looks like that was not effective as the first year of the National league goes back to 1876
+-- I will search the first time the AL and NL merged to make Major League baseball 
+
+SELECT MIN(yearid)
+FROM teams as t
+LEFT JOIN leagues as l
+ON t.lgid = l.lgid
+WHERE l.lgid = 'ML'
+
+-- I decided to try it a different way because the Major league "ML" exists in the database to only show that it is 
+--one of the active leagues. It lists players as either in the AL or NL, one of the conferences
+-- I will go decade by decade to see how many teams existed in the league during each year to define my salary spending and its effectiveness
+
+SELECT lgid, teamid, franchid
+FROM teams 
+WHERE yearid = 1950
+
+-- In 1950 Major League baseball, only 16 teams existed. This next query I will just count how many teams were in the league the
+-- rest of the century
+
+SELECT COUNT(franchid), yearid
+FROM teams 
+WHERE yearid BETWEEN 1960 AND 2000
+GROUP BY yearid 
+ORDER BY yearid ASC
+
+-- This was a very effective query as it shows the Major league transformation from 16 teams to 18 teams in 1961, then in 1962
+-- the league expanded to 20 teams for the next 6 years... then in 1969 Major League Baseball jumped up to 24 teams. Then in 
+-- 1977 it jumped up to 26 teams all the way until 1993 two more teams were added. Then in 1998 2 more teams were added to reflect
+-- 30 teams like today. 
+
+-- Now lets look at salary spending 
+
+SELECT SUM(salary) as total_team_salary, teamid, yearid
+FROM salaries 
+WHERE yearid BETWEEN 1985 AND 2019
+GROUP BY teamid, yearid
+ORDER BY SUM(salary) DESC
+LIMIT 100
+
+-- The previous query showed us that the New York Yankees and the LA Dodgers are the biggest spenders, with the NY Yankees occupying
+-- 6 of the top ten most expensive total salaries and the Dodgers occupying the other 4 slots in the top then. The next query will show 
+-- how many times out of the top 100 the NY yankees spent top dollars on their team in total salary by season from 1985 and on
+
+SELECT teamid, yearid FROM (
+  SELECT SUM(salary) as total_team_salary, teamid, yearid
+FROM salaries 
+WHERE yearid BETWEEN 1985 AND 2019
+GROUP BY teamid, yearid
+ORDER BY SUM(salary) DESC
+LIMIT 100) as highest_salary
+WHERE teamid = 'NYA'
+GROUP BY highest_salary.teamid, highest_salary.yearid
+ORDER BY highest_salary.yearid ASC
+
+-- The New York Yankees actually only appeared in the top 100 15 times. I thought it would be more. Lets count how many 
+-- times each team appeared in that top 100 list. 
+-- This was all good practice, but I just noticed the database didn't start sharing salary prices in this dataset until 1985. 
+-- That narrows our scope by 16 seasons. I went back and changed all queries to start research from 1985 and on. 
+
+SELECT COUNT(teamid), teamid FROM (
+  	SELECT SUM(salary) as total_team_salary, teamid, yearid
+		FROM salaries 
+		WHERE yearid BETWEEN 1985 AND 2019
+		GROUP BY teamid, yearid
+		ORDER BY SUM(salary) DESC
+		LIMIT 100) as HS
+GROUP BY HS.teamid 
+ORDER BY COUNT(HS.teamid) DESC;
+
+-- The top 9 teams from the previous query had 5 or more teams in the top 75 of most expensive teams. New York Yankees
+-- had 15 of the most expensive teams and Boston Red Sox were next with 13, then Detroit with 8 and the Angels tied at 8. 
+-- Also going back a few queries, all of the top 100 most expensive teams in salaries were from 2010 and on through 2017. 
+
+-- I think the better way of figuring this out is to base things off of averages and window functions to see
+-- more data displayed at once 
+
+SELECT AVG(HS.total_salary_py), HS.franchid FROM 
+			(SELECT SUM(s.salary) as total_salary_py, s.yearid, t.franchid
+			FROM salaries as s
+			JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+      WHERE s.yearid BETWEEN 1985 AND 2019
+			GROUP BY s.yearid, t.franchid
+			ORDER BY SUM(s.salary) DESC) as HS
+GROUP BY HS.franchid
+ORDER BY AVG(HS.total_salary_py) DESC
+
+-- The last few queriers about salary helped us understand what each franchise spending habits.  
+-- The next few queries we will start to look at winning and team success. First I will see who has won the most World Series
+-- from 1985 to 2019
+
+SELECT teamid, yearid,
+COUNT(*) OVER (PARTITION BY teamid ORDER BY yearid ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS rolling_count
+FROM teams
+WHERE wswin = 'Y' AND yearid BETWEEN 1985 AND 2019
+GROUP BY teamid, yearid
+ORDER BY yearid ASC
+
+-- Amount of times  each team has won from 1985 to 2019
+
+SELECT COUNT(teamid), teamid
+FROM teams
+WHERE wswin = 'Y' AND yearid BETWEEN 1985 AND 2019
+GROUP BY teamid
+ORDER BY COUNT(teamid) DESC;
+
+-- The previous 2 queries were very helpful in showing who won the most world seris from 1985 to 2019. Now we will look at Wins
+-- This first query will show average wins per season per team from 1985 to 2019
+
+SELECT AVG(w) AS avg_win, SUM(w) as total_win, franchid
+FROM teams
+WHERE yearid BETWEEN 1985 AND 2019
+GROUP BY franchid
+ORDER BY AVG(w) DESC;
+
+-- In the previous query I combined total wins from 1985 to 2017 with average wins per season per team over the same time phrame.
+-- The next query will show how many times a team has had the most wins in a season. 
+
+SELECT MW.franchid, COUNT(*) AS most_seasons_max FROM 
+           (SELECT w, l, franchid, yearid, MAX(w) OVER (PARTITION BY yearid ORDER BY yearid ASC) AS max_win_season
+					  FROM teams  
+						WHERE yearid BETWEEN 1985 AND 2018
+            GROUP BY w, l, franchid, yearid) AS MW
+WHERE w = max_win_season
+GROUP BY MW.franchid
+ORDER BY COUNT(MW.*) DESC
+
+
+-- This query will show how many seasons a team finished above the average amount of wins for that given season.  
+
+SELECT franchid, COUNT(*) above_avg FROM 
+						(SELECT w, l, franchid, yearid, AVG(w) OVER (PARTITION BY yearid ORDER BY yearid ASC) AS above_avg_season
+					  FROM teams 
+						WHERE yearid BETWEEN 1985 AND 2019) MW
+WHERE w > above_avg_season
+GROUP BY MW.franchid
+ORDER BY COUNT(MW.*) DESC;
+
+-- Total salary of all World Series winning teams from 1985 (when database starts counting salary) to 2016. You can see that 
+-- The Yankees paid a lot for championships 
+
+SELECT SUM(s.salary), s.teamid, s.yearid
+FROM salaries as s
+JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+WHERE s.yearid BETWEEN 1985 AND 2019 AND t.wswin = 'Y'
+GROUP BY s.teamid, s.yearid
+ORDER BY s.yearid ASC
+
+-- 12 Teams have spent over 200 million total salary in a season, only the Yankees won when spending over 200 Million 
+
+SELECT SUM(s.salary), s.teamid, s.yearid
+FROM salaries as s
+JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+--WHERE t.wswin = 'Y'
+GROUP BY s.teamid, s.yearid
+HAVING SUM(salary) > 200000000
+
+-- This will show how many teams have won the world series when they spend under 100 million
+
+SELECT SUM(s.salary) as salary, s.teamid, s.yearid
+FROM salaries as s
+JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+-- WHERE t.wswin = 'Y' 
+GROUP BY s.teamid, s.yearid
+HAVING SUM(salary) < 100000000
+ORDER BY yearid ASC
+
+-- 22 teams won the worls series when spending under 100 million. No team spent over 100 million until after the year 2000 though
+-- So, let's do the same query as above, but see how many won spending under 100 million, but after the year 2000. 
+
+SELECT SUM(s.salary), s.teamid, s.yearid
+FROM salaries as s
+JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+WHERE t.wswin = 'Y' AND s.yearid > 2000
+GROUP BY s.teamid, s.yearid
+HAVING SUM(salary) < 100000000
+ORDER BY yearid ASC
+
+-- 7 teams won spending less than 100 million after the year 2000 when teams started to more regularly spend above 100 million dollars
+-- per season on players
+
+SELECT SUM(s.salary), s.teamid, s.yearid
+FROM salaries as s
+JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+WHERE t.wswin = 'Y' 
+GROUP BY s.teamid, s.yearid
+HAVING SUM(salary) BETWEEN 100000000 AND 200000000
+ORDER BY yearid ASC
+
+-- 8 Teams won when spending over 100 million but under 200 million. So that makes it that only one more team won the World series
+-- when spending over 100 million versus not spending over 100 million. 
+-- The next query will rank salary spending from 1 to 26/28/30 depending on the season and from highest to lowest. Then we will 
+-- query what teams won the world series and show their salary spending rank. 
+
+SELECT SR.* FROM 
+		(SELECT t.franchid, t.yearid, SUM(s.salary), RANK () OVER (PARTITION BY t.yearid ORDER BY SUM(s.salary) DESC) AS Salary_rank,
+     t.wswin
+		 FROM teams as t 
+		 JOIN salaries as s on t.teamid = s.teamid AND t.yearid = s.yearid
+		 GROUP BY t.franchid, t.yearid, t.wswin
+		 ORDER BY t.yearid ASC) AS SR
+WHERE SR.wswin = 'Y'
+
+-- Out of 31 seasons the highest paying team won the World Series 5 times. 20 of the 31 seasons the World series champs were in the
+-- top 10 of highest salary spenders/payers for that season. Three times the World Series champ was ranked in the 20s in spending. 
+-- The next query will be similar, but will show the salary rank with teams that were above 90 wins for each season. 
+
+SELECT SR.* FROM 
+		(SELECT t.franchid, t.yearid, SUM(s.salary), RANK () OVER (PARTITION BY t.yearid ORDER BY SUM(s.salary) DESC) AS Salary_rank,
+     t.w
+		 FROM teams as t 
+		 JOIN salaries as s on t.teamid = s.teamid AND t.yearid = s.yearid
+		 GROUP BY t.franchid, t.yearid, t.w
+		 ORDER BY t.yearid ASC) AS SR
+WHERE SR.w >= 90
+
+-- 149 of the 214 teams that finished with 90 or more wins since 1985 were in the top half of salary spending, whereas 65 were 
+-- in the lower half of spending
+
+-- To sum up the data, the NY Yankees and Boston Red Sox are great examples of spending leading to winning. The Yankees
+-- have had the most expensive team 15 seasons and the Red Sox are next with 13. They are also 1st and 2nd in highest average
+-- salary. It "paid off" because they are first and second in Total wins, Average wins and World series wins since 1985. 
+-- The Yankees have 3,172 total wins, Average 90.6 wins per season, and have 5 World Series wins in that span. 
+-- The Red Sox have 3,032 total wins, Average 86.6 wins per season, and have 4 World Series wins in the same span. 
+
+-- Of those 9 World Series Wins between them, the years they won they ranked 2nd, 2nd, 1st, 1st, 2nd, 2nd, 1st, 4th (for some reason
+-- the database doesn't show any results after 2016 in some queries) in highest salary spending
+
+-- There are a few teams that show that you don't need to spend a ton to suceed. Those teams are the Cincinatti Reds,
+-- Oakland A's, Minnesota Twins, and the Kansas City Royals. 
+
+-- The Minnesota Twins won 2 World Series in 1987 and 1991. Those years they were the 24th highest spending team and the 12th. 
+-- The Minnestoa Twins are also in the bottom half of average salary spending. Unfortunately, they are 19th in total wins and 
+-- average wins per season with 2750 total wins and 78.5 wins from 1985 to 2019. They are 23rd in Average salary spending though. 
+
+-- The Oakland A's won 1 World Series from our assesment period in 1989. Although they were 8th highest in salary spending that
+-- season, they are 28th in average salary spending over our assesment period. They also have had the highest winning team in 4 
+-- of those seasons. That is second to the Yankees, Braves, and Cardinals 5. 6 times they had 90 win seasons where they were in 
+-- the bottom half of the 20s in highest total team salary. 2 of those 6 seasons they won over 100 games in a season. All of those 
+-- seasons were post 2001. As the movie Money Ball suggests, "Money Ball" leads to regular season success, but has yet to win them 
+-- a World Series. 
+
+-- Kansas City Royals and the Cincinatti Reds are two other good examples that paying doesn't lead to winning. Both are in the 
+-- bottom half of salary spending average and both are World Series Champs in our assesment span from 1985 to 2019. Both times 
+-- the Royals won the WS in 1985 and 2015, they were ranked 17th in salary spending. The year Cincinatti won in 1990 
+-- they were 21st in salary spending. 
+-- Their regular season success hasn't been as great. Cincinatti is 17th overall in total wins with 2756, and an average of 78.7 
+-- per season. Although Kansas city has won 2 World Series in this span, they are 29th in total wins with 2581 which is 73.7
+-- wins per season. 
+
+-- Overall I don't think there is direct correlation to Spending = Winning. The Yankees and Red Sox, along with other big market
+-- teams have found success and also have spent a lot of money on total team salary, but there are plenty of other teams that have 
+-- succeeded in both the regular season or by winning World Series Championships without having to spend a lot in total team salary. 
+-- I would say that although there is some strong evidence with the Yankees and Red Sox, it isn't obvious enough to say that winning
+-- is due to high salary spending. Compared to other professional leagues, there is clearly more parity in Major League Baseball
+
+-- (The results are skewed in some of these queries because the salaries only go as far as 2016, but the World Series results go 
+-- all the way to 2019). Out of 33 years (1994 lockout there was no champion), there have been 20 different WS champs. 
+
+-- In the NBA there has been 12 different winners in the same span and they didn't have a lockout season with no champion. 
+-- The NFL in a similar time span has had 16 different franchises win the Super Bowl. 
+
+-- The MLB has had 20 as mentioned before. There are multiple factors to the parity in this sport. It is a team game where one 
+-- player can't have as big of an impact like in the NBA or NFL. And although the Yankees and Red Sox spent the most and won 
+-- the most, there were plenty seasons where teams spend a lot and didn't win. 12 times a team spent over 200 million in a season.
+-- Only one time one of those teams won the World Series. 
+
+-- After the year 2000 the World series winning team won 7 times spending under 100 million dollars, 8 times spending over 100
+-- million, and 1 time spending over 200 million (the yankees as mentioned before) 
+
+-- The most important query was this one copied and pasted below
+
+SELECT SR.* FROM 
+		(SELECT t.franchid, t.yearid, SUM(s.salary), RANK () OVER (PARTITION BY t.yearid ORDER BY SUM(s.salary) DESC) AS Salary_rank,
+     t.wswin
+		 FROM teams as t 
+		 JOIN salaries as s on t.teamid = s.teamid AND t.yearid = s.yearid
+		 GROUP BY t.franchid, t.yearid, t.wswin
+		 ORDER BY t.yearid ASC) AS SR
+WHERE SR.wswin = 'Y'
+
+-- As mentioned above... -- Out of 31 seasons the highest paying team won the World Series 5 times. 20 of the 31 seasons the World 
+-- series champs were in the top 10 of highest salary spenders/payers for that season. Three times the World Series champ was ranked 
+-- in the 20s in spending. 
+
+SELECT AVG(S2.salary) FROM 
+		(SELECT SUM(s.salary) as salary, s.teamid, s.yearid
+		 FROM salaries as s
+		 JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+		 --WHERE t.wswin = 'Y'
+		 GROUP BY s.teamid, s.yearid
+		 HAVING SUM(salary) > 200000000) AS S2
+WHERE S2.yearid != 2009
+
+-- This shows that the 11 teams that spent over 200 million dollars and didn't win the world series spent 2.3 billion dollars. 
+-- That amount divided by 11 for the amount of teams that didn't win is 215,454,545. 215 million per team for not winning. 
+-- (I initially did SUM for the query above, but then changed it to AVG and the final number was very similar)
+
+SELECT AVG(S0.salary) FROM 		
+    (SELECT SUM(s.salary) as salary, s.teamid, s.yearid, t.wswin
+		FROM salaries as s
+		JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+		--WHERE t.wswin != 'Y'
+		GROUP BY s.teamid, s.yearid, t.wswin
+		HAVING SUM(salary) < 100000000
+		ORDER BY yearid ASC) as S0
+WHERE S0.wswin = 'N'
+
+-- 773 teams spent under 100 million dollars. 723 of those teams didn't win the WS. If you sum up the 723 teams that didn't win 
+-- the world series you get 33.31 billion. If you divide it by 723 teams you get 46,014,117
+-- (I initially did SUM for the query above, but then changed it to AVG and the final number was very similar)
+
+SELECT AVG(S1.salary) FROM 		
+    (SELECT SUM(s.salary) as salary, s.teamid, s.yearid, t.wswin
+		FROM salaries as s
+		JOIN teams as t on s.teamid = t.teamid AND s.yearid = t.yearid
+		WHERE t.wswin = 'Y' 
+		GROUP BY s.teamid, s.yearid, t.wswin
+		HAVING SUM(salary) BETWEEN 100000000 AND 200000000
+		ORDER BY yearid ASC) as S1
+WHERE S1.wswin = 'N'
+
+-- 133 teams spent over 100 million, but under 200 million on total salary. 125 of them didn't win the WS. The SUM salaries of
+-- those teams that didn't win the WS is 16.08 Billion. If you divide that by 125, it is 128,640,000
+-- (I initially did SUM for the query above, but then changed it to AVG and the final number was very similar)
+
+
+-- You have to wonder if the risk/reward is worth it for spending more money. 4 times the LA Dodgers spent over 200 million per
+-- season and didn't win the WS. From 1985 to 2019 they won it once. (This database doesn't cover 2020 when LAD won the WS again) 
+
+-- And although the New York Yankees won 5 times from 1985 to 2016 when we have salary totals. They spent over 200 million 8 times
+-- and only won it one of those times. The other 4 times the Yankees won the WS from 1996 to 2000 they spent under 100 million all 
+-- four times. The big spending didn't start until after the year 2000, but it goes to show that spending 
+-- doesn't equal winning. 
+
+-- Boston won 4 WS titles after the spending increased in 2001. They supposedly combined "Money Ball" tactics along with spending
+-- and as a result they won 4 WS titles from 2004 to 2018. Never spending over 200 million. 
