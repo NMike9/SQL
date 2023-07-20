@@ -1,0 +1,111 @@
+Google BigQuery Public Database - USA Names from 1910 - Present (2021) 
+
+***Preview the database***
+SELECT * FROM `bigquery-public-data.usa_names.usa_1910_current` 
+LIMIT 1000
+-- Result - 6 Columns, Row, state, gender, year, name, number(numb of times name given)
+
+***Highest Number of times a name was given and the year it was given in***
+SELECT name, year, MAX(number) 
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+GROUP BY name, year
+ORDER BY MAX(number) DESC
+
+***Top 5 Most Popular Names***
+SELECT name, SUM(number) as nTimesNamed
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+GROUP BY name
+ORDER BY nTimesNamed DESC
+LIMIT 5
+-- Result - James, John, Robert, Michael, William (All Male)
+
+***Next 5 Most Popular Male Names*** 
+SELECT name, SUM(number) as nTimesNamed
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'M'
+GROUP BY name 
+ORDER BY nTimesNamed DESC
+LIMIT 5 OFFSET 5
+-- Result - David, Joseph, Richard, Charles, Thomas
+
+***Top 5 Most Popular Female Names***
+SELECT name, SUM(number) as nTimesNamed
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'F'
+GROUP BY name
+ORDER BY nTimesNamed DESC
+LIMIT 5
+-- Result - Mary, Patricia, Elizabeth, Jennifer, Linda
+
+***Most Unpopular Names By Gender***
+SELECT name, SUM(number) as nTimesNamed
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'M'
+GROUP BY name
+ORDER BY nTimesNamed
+LIMIT 5
+-- Result - Male - Hurschel, Forney, Millie, Virge, Wood
+
+SELECT name, SUM(number) as nTimesNamed
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE gender = 'F'
+GROUP BY name
+ORDER BY nTimesNamed ASC
+LIMIT 5
+-- Result - Female - Levis, Autie, Arnie, Conola, Dellie
+
+***Saw my name Michael is popular, so lets see what States it is most popular in***
+WITH state_rankings AS(
+  SELECT name, state, SUM(number) as nTimesNamed, RANK() OVER(PARTITION BY state ORDER BY SUM(number)DESC) as sRank
+  FROM `bigquery-public-data.usa_names.usa_1910_current`
+  GROUP BY name, state
+  ORDER BY state
+) 
+SELECT name, COUNT(nTimesNamed)
+FROM state_rankings
+WHERE sRank = 1 -- AND name = 'Michael'
+GROUP BY name
+ORDER BY COUNT(nTimesNamed) DESC
+-- Result - Michael is most given name in 10 States, AK, AZ, CA, CO, FL, HI, NV, OR, UT, WA. Robert, James, Michael, John, Mary make up the top 5  
+
+***Now I am going to use a similar CTE as the one above to see how many years Michael was the most given name***
+WITH year_rankings AS(
+  SELECT name, year, SUM(number) as nTimesNamed, RANK() OVER(PARTITION BY year ORDER BY SUM(number)DESC) as yRank
+  FROM `bigquery-public-data.usa_names.usa_1910_current`
+  GROUP BY name, year
+  ORDER BY year
+)
+SELECT name, COUNT(nTimesNamed)
+FROM year_rankings
+WHERE yRank = 1 -- AND name = 'Michael'
+GROUP BY name
+ORDER BY COUNT(nTimesNamed) DESC
+-- Result - Out of 112 years Michael was the most given name in a year 44 of the years. The other names that round out the list are Mary, James, and Jacob all 
+with double digit years their name was most given 
+
+
+***Saw a TikTok saying that after the Disney Movie 'Splash' came out in 1985 the name 'Madison' went from predominantly a Boy name to a Girl Name because the 
+main actress' character plays a mermaid turned human who names herself 'Madison.' Lets see if that is true
+SELECT year,
+  SUM(CASE WHEN gender = 'M' THEN number ELSE 0 END) as Male_Madison,
+  SUM(CASE WHEN gender = 'F' THEN number ELSE 0 END) as Female_Madison
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE name = 'Madison'
+GROUP BY year
+ORDER BY year 
+-- Result - Most Definitely True. From 1910 - 1983 the Female_Madison column has only 0 for every year until in 1984 there were 6 girls named Madison. Let's use 
+this as a CTE to count the number of times the name Madison was given after 1984
+
+WITH MFMadison AS(
+  SELECT year,
+  SUM(CASE WHEN gender = 'M' THEN number ELSE 0 END) as Male_Madison,
+  SUM(CASE WHEN gender = 'F' THEN number ELSE 0 END) as Female_Madison
+FROM `bigquery-public-data.usa_names.usa_1910_current`
+WHERE name = 'Madison'
+GROUP BY year
+ORDER BY year 
+)
+SELECT SUM(Female_Madison) AS nGiven
+FROM MFMadison
+WHERE year >= 1985
+-- Result - Wow! The TikTok was accurate. After the movie 'Splash,' Madison went from 6 to 399,095 times given to girls. It is now predominantly a girl name now.  
